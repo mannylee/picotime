@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Picotime is a menu bar–only macOS "accessory" app (no Dock icon, no window, no app-switcher entry) that displays the time as `yyyy-MM-dd HH:mm:ss`, refreshed every second, and chimes at the top of every hour. Clicking the clock opens a scrollable, Itsycal-style calendar popover; the settings (**Hourly Chime**, **Start at Login**, version, **Quit**) live in a flat panel at the bottom of that popover. The entire app is a single Swift file, [Sources/main.swift](Sources/main.swift) using AppKit/Cocoa directly — there is no Xcode project, no Swift Package Manager manifest, and no third-party dependencies. The one bundled asset is the hourly chime, `Resources/beep-beep.mp3` (attribution in [CREDITS.md](CREDITS.md)).
+Picotime is a menu bar–only macOS "accessory" app (no Dock icon, no window, no app-switcher entry) that displays the time as `yyyy-MM-dd HH:mm:ss`, refreshed every second, and chimes at the top of every hour. Clicking the clock opens a scrollable calendar popover; the settings (**Hourly Chime**, **Start at Login**, version, **Quit**) live in a flat panel at the bottom of that popover. The entire app is a single Swift file, [Sources/main.swift](Sources/main.swift) using AppKit/Cocoa directly — there is no Xcode project, no Swift Package Manager manifest, and no third-party dependencies. The one bundled asset is the hourly chime, `Resources/beep-beep.mp3` (attribution in [CREDITS.md](CREDITS.md)).
 
 ## Build & run
 

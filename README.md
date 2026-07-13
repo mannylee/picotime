@@ -2,7 +2,7 @@
 
 A tiny macOS menu bar clock that shows the time as `YYYY-MM-DD HH:mm:ss` (e.g. `2026-07-13 14:32:07`) — the format the built-in Control Center clock won't give you.
 
-Picotime is a menu bar–only "accessory" app: no Dock icon, no window, no app-switcher entry. It just puts one item in the menu bar and refreshes it every second. It also chimes at the top of every hour. Click the clock to open a scrollable, Itsycal-style calendar.
+Picotime is a menu bar–only "accessory" app: no Dock icon, no window, no app-switcher entry. It just puts one item in the menu bar and refreshes it every second. It also chimes at the top of every hour. Click the clock to open a scrollable calendar.
 
 ## Build
 
@@ -18,7 +18,7 @@ This compiles `Sources/main.swift` with `swiftc` (Command Line Tools — no Xcod
 open Picotime.app
 ```
 
-The timestamp appears in the menu bar, to the left of the system clock. Click it to open a scrollable, Itsycal-style calendar popover: a continuously scrolling week grid with today outlined, weekends dimmed, and a hairline dividing adjacent months. The header shows **`Year Month`** with prev / today / next buttons; the settings live in a flat panel at the bottom — **Hourly Chime** (toggle), **Start at Login** (toggle), the version (**Picotime `yyyymmdd`**), and **Quit**.
+The timestamp appears in the menu bar, to the left of the system clock. Click it to open a scrollable calendar popover: a continuously scrolling week grid with today outlined, weekends dimmed, and a hairline dividing adjacent months. The header shows **`Year Month`** with prev / today / next buttons; the settings live in a flat panel at the bottom — **Hourly Chime** (toggle), **Start at Login** (toggle), the version (**Picotime `yyyymmdd`**), and **Quit**.
 
 ## Hide the built-in clock
 

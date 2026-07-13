@@ -5,9 +5,9 @@ import ServiceManagement
 //
 // It runs as an "accessory" app: no Dock icon, no app-switcher entry, no window.
 // It puts an NSStatusItem in the menu bar, refreshes it once a second, and
-// chimes at the top of every hour. Left-clicking the clock opens a scrollable,
-// Itsycal-style calendar popover; the settings (Hourly Chime, Start at Login,
-// Quit) live as an icon toolbar across the top of that popover.
+// chimes at the top of every hour. Left-clicking the clock opens a scrollable
+// calendar popover; the settings (Hourly Chime, Start at Login, Quit) live in a
+// flat panel across the bottom of that popover.
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -175,7 +175,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 // MARK: - Calendar popover
 
-/// The scrollable, Itsycal-style calendar shown when the clock is clicked.
+/// The scrollable calendar shown when the clock is clicked.
 ///
 /// Layout top-to-bottom: a header (month label + navigation), a weekday header
 /// row, a continuously scrolling table of week rows, and a flat settings panel
