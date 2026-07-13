@@ -1,0 +1,11 @@
+# Build output — assembled by build.sh, regenerated on every build
+Picotime.app/
+
+# Swift / swiftc intermediates
+*.o
+*.swiftmodule
+.build/
+DerivedData/
+
+# macOS
+.DS_Store
