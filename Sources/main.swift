@@ -5,12 +5,21 @@ import ServiceManagement
 //
 // It runs as an "accessory" app: no Dock icon, no app-switcher entry, no window.
 // It puts an NSStatusItem in the menu bar, refreshes it once a second, and
-// chimes at the top of every hour. The menu offers a "Start at Login" toggle.
+// chimes at the top of every hour. The menu offers "Hourly Chime" and
+// "Start at Login" toggles.
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var timer: Timer?
     private var loginItem: NSMenuItem!
+    private var chimeItem: NSMenuItem!
+
+    // Whether the hourly chime plays. Persisted in UserDefaults; defaults to on
+    // (registered in applicationDidFinishLaunching).
+    private let chimeDefaultsKey = "hourlyChimeEnabled"
+    private var isChimeEnabled: Bool {
+        UserDefaults.standard.bool(forKey: chimeDefaultsKey)
+    }
 
     // Fixed format, locale-independent. Capital HH = 24-hour clock.
     // en_US_POSIX guarantees the digits/format never get localized.
@@ -31,6 +40,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Missing key ⇒ chime on, matching the app's original always-on behavior.
+        UserDefaults.standard.register(defaults: [chimeDefaultsKey: true])
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
@@ -40,15 +52,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 ofSize: NSFont.systemFontSize, weight: .regular)
         }
 
-        // Click menu with a login-item toggle and a Quit item.
+        // Click menu with the setting toggles and a Quit item.
         let menu = NSMenu()
-        menu.delegate = self  // refresh the checkmark each time the menu opens
+        menu.delegate = self  // refresh the checkmarks each time the menu opens
+
+        chimeItem = NSMenuItem(
+            title: "Hourly Chime",
+            action: #selector(toggleHourlyChime(_:)),
+            keyEquivalent: "")
+        chimeItem.target = self
+        menu.addItem(chimeItem)
+
         loginItem = NSMenuItem(
             title: "Start at Login",
             action: #selector(toggleLaunchAtLogin(_:)),
             keyEquivalent: "")
         loginItem.target = self
         menu.addItem(loginItem)
+
         menu.addItem(.separator())
         menu.addItem(
             NSMenuItem(
@@ -90,11 +111,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Driven from the timer tick (not the initial launch `update()`), so
     /// opening the app mid-hour never beeps — only a real HH:00:00 rollover does.
     private func chimeIfTopOfHour() {
+        guard isChimeEnabled else { return }
         let parts = Calendar.current.dateComponents([.minute, .second], from: Date())
         if parts.minute == 0 && parts.second == 0 {
             hourlyChime?.stop()  // rewind in case it's somehow still playing
             hourlyChime?.play()
         }
+    }
+
+    /// Flip the hourly-chime preference and persist it. The next HH:00:00 tick
+    /// reads `isChimeEnabled`, so no timer changes are needed.
+    @objc private func toggleHourlyChime(_ sender: NSMenuItem) {
+        UserDefaults.standard.set(!isChimeEnabled, forKey: chimeDefaultsKey)
+        refreshChimeItemState()
+    }
+
+    private func refreshChimeItemState() {
+        chimeItem.state = isChimeEnabled ? .on : .off
     }
 
     /// Register/unregister the app as a login item via SMAppService (macOS 13+).
@@ -123,6 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
+        refreshChimeItemState()
         refreshLoginItemState()
     }
 }

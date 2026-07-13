@@ -18,7 +18,7 @@ This compiles `Sources/main.swift` with `swiftc` (Command Line Tools — no Xcod
 open Picotime.app
 ```
 
-The timestamp appears in the menu bar, to the left of the system clock. Click it for a menu with **Start at Login** (toggle) and **Quit Picotime**.
+The timestamp appears in the menu bar, to the left of the system clock. Click it for a menu with **Hourly Chime** (toggle), **Start at Login** (toggle), and **Quit Picotime**.
 
 ## Hide the built-in clock
 
@@ -37,7 +37,9 @@ The registration is tied to the app's on-disk location, and `build.sh` recreates
 
 ## Hourly chime
 
-At the top of every hour (`HH:00:00`) Picotime plays a short chime, bundled at `Resources/beep-beep.mp3`. To change or silence it, replace that file (any `NSSound`-supported format — `.wav`/`.aiff`/`.caf`/`.m4a`/`.mp3`) and rebuild; if you rename it, update the `forResource`/`withExtension` lookup in [Sources/main.swift](Sources/main.swift). See [CREDITS.md](CREDITS.md) for the bundled sound's attribution.
+At the top of every hour (`HH:00:00`) Picotime plays a short chime, bundled at `Resources/beep-beep.mp3`. Toggle it on/off from the menu (**Hourly Chime**) — the choice is remembered across launches (it's on by default).
+
+To change the sound, replace that file (any `NSSound`-supported format — `.wav`/`.aiff`/`.caf`/`.m4a`/`.mp3`) and rebuild; if you rename it, update the `forResource`/`withExtension` lookup in [Sources/main.swift](Sources/main.swift). See [CREDITS.md](CREDITS.md) for the bundled sound's attribution.
 
 ## Customizing the format
 
