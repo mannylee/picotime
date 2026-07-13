@@ -1,4 +1,5 @@
 import Cocoa
+import ServiceManagement
 
 // Picotime — a menu bar clock that shows the time as `YYYY-MM-DD HH:mm:ss`.
 //
@@ -8,6 +9,7 @@ import Cocoa
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var timer: Timer?
+    private var loginItem: NSMenuItem!
 
     // Fixed format, locale-independent. Capital HH = 24-hour clock.
     // en_US_POSIX guarantees the digits/format never get localized.
@@ -28,8 +30,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 ofSize: NSFont.systemFontSize, weight: .regular)
         }
 
-        // Right-click / click menu with a Quit item.
+        // Click menu with a login-item toggle and a Quit item.
         let menu = NSMenu()
+        menu.delegate = self  // refresh the checkmark each time the menu opens
+        loginItem = NSMenuItem(
+            title: "Start at Login",
+            action: #selector(toggleLaunchAtLogin(_:)),
+            keyEquivalent: "")
+        loginItem.target = self
+        menu.addItem(loginItem)
+        menu.addItem(.separator())
         menu.addItem(
             NSMenuItem(
                 title: "Quit Picotime",
@@ -63,6 +73,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func update() {
         statusItem.button?.title = formatter.string(from: Date())
+    }
+
+    /// Register/unregister the app as a login item via SMAppService (macOS 13+).
+    /// Reads the current status live so the checkmark reflects reality even if the
+    /// user changed it in System Settings > General > Login Items.
+    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            } else {
+                try SMAppService.mainApp.register()
+            }
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "Couldn't update Start at Login"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+        }
+        refreshLoginItemState()
+    }
+
+    private func refreshLoginItemState() {
+        loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+    }
+}
+
+extension AppDelegate: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        refreshLoginItemState()
     }
 }
 
