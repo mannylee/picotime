@@ -12,10 +12,12 @@
 	<string>Picotime</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<!-- Placeholders: build.sh overwrites these with the build date (CalVer).
+	     CFBundleShortVersionString = yyyymmdd, CFBundleVersion = yyyymmddHHMM. -->
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>0</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>LSUIElement</key>

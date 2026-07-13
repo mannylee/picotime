@@ -18,6 +18,17 @@ echo "Creating bundle layout..."
 mkdir -p "${MACOS}"
 cp Info.plist "${CONTENTS}/Info.plist"
 
+# Date-based (CalVer) versioning, stamped at build time so it's zero-maintenance
+# and always reflects the build date. The repo Info.plist holds placeholders;
+# these lines overwrite the copy inside the bundle.
+#   CFBundleShortVersionString = yyyymmdd      (human-facing marketing version)
+#   CFBundleVersion            = yyyymmddHHMM   (monotonic + unique within a day)
+SHORT_VERSION="$(date +%Y%m%d)"
+BUILD_VERSION="$(date +%Y%m%d%H%M)"
+echo "Stamping version ${SHORT_VERSION} (build ${BUILD_VERSION})..."
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${SHORT_VERSION}" "${CONTENTS}/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_VERSION}" "${CONTENTS}/Info.plist"
+
 # Copy bundled assets (the hourly chime, etc.) into Contents/Resources so
 # Bundle.main.url(forResource:…) can find them at runtime.
 if [ -d Resources ]; then
@@ -37,4 +48,4 @@ rm -f "${BIN}.arm64" "${BIN}.x86_64"
 echo "Ad-hoc code signing..."
 codesign --force --sign - "${BUNDLE}"
 
-echo "Done: ${PWD}/${BUNDLE}"
+echo "Done: ${PWD}/${BUNDLE} (version ${SHORT_VERSION}, build ${BUILD_VERSION})"
