@@ -56,6 +56,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.delegate = self  // refresh the checkmarks each time the menu opens
 
+        // Non-clickable version line (the build-date CalVer stamped by build.sh).
+        // A nil action leaves it disabled, so it reads as a greyed-out label.
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let versionItem = NSMenuItem(title: "Picotime \(version)", action: nil, keyEquivalent: "")
+        versionItem.isEnabled = false
+        menu.addItem(versionItem)
+        menu.addItem(.separator())
+
         chimeItem = NSMenuItem(
             title: "Hourly Chime",
             action: #selector(toggleHourlyChime(_:)),

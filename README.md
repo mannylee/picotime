@@ -18,7 +18,7 @@ This compiles `Sources/main.swift` with `swiftc` (Command Line Tools — no Xcod
 open Picotime.app
 ```
 
-The timestamp appears in the menu bar, to the left of the system clock. Click it for a menu with **Hourly Chime** (toggle), **Start at Login** (toggle), and **Quit Picotime**.
+The timestamp appears in the menu bar, to the left of the system clock. Click it for a menu showing the version (**Picotime `yyyymmdd`**, non-clickable) plus **Hourly Chime** (toggle), **Start at Login** (toggle), and **Quit Picotime**.
 
 ## Hide the built-in clock
 
