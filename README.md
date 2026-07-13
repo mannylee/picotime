@@ -31,7 +31,9 @@ Picotime is independent of whatever you choose — quit it any time.
 
 ## Launch at login
 
-Click the menu bar clock and toggle **Start at Login**. This registers the app with macOS via `SMAppService` (the checkmark reflects the current state and stays in sync with System Settings → General → Login Items).
+Click the menu bar clock and toggle **Start at Login**. This registers the app with macOS via `SMAppService`. The checkmark is read from the live registration status at launch and each time the menu opens, so it stays in sync with System Settings → General → Login Items.
+
+If the item shows **"Start at Login (approve in System Settings)"** with a checkmark, macOS has the registration but is waiting for you to confirm it under Login Items — flip it on there once. This is common for the ad-hoc-signed dev build.
 
 The registration is tied to the app's on-disk location, and `build.sh` recreates the bundle on every build — so for a login item that reliably survives, move `Picotime.app` to `/Applications` and toggle it on from there.
 

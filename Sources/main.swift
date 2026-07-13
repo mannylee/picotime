@@ -70,6 +70,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         loginItem.target = self
         menu.addItem(loginItem)
 
+        // Reflect the persisted/registered state immediately, so the checkmarks
+        // are right the first time the menu opens after a launch — not only
+        // after menuWillOpen has fired once.
+        refreshChimeItemState()
+        refreshLoginItemState()
+
         menu.addItem(.separator())
         menu.addItem(
             NSMenuItem(
@@ -150,7 +156,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshLoginItemState() {
-        loginItem.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+        // `.enabled` is the normal "on" state. `.requiresApproval` means the app
+        // IS registered but macOS wants the user to confirm it in System Settings
+        // (common for ad-hoc-signed apps run from a dev folder) — from the user's
+        // point of view they turned it on, so show a tick and say so in the title.
+        switch SMAppService.mainApp.status {
+        case .enabled:
+            loginItem.state = .on
+            loginItem.title = "Start at Login"
+        case .requiresApproval:
+            loginItem.state = .on
+            loginItem.title = "Start at Login (approve in System Settings)"
+        default:  // .notRegistered, .notFound
+            loginItem.state = .off
+            loginItem.title = "Start at Login"
+        }
     }
 }
 
