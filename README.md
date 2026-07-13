@@ -2,6 +2,9 @@
 
 A tiny macOS menu bar clock that shows the time as `YYYY-MM-DD HH:mm:ss` (e.g. `2026-07-13 14:32:07`) — the format the built-in Control Center clock won't give you.
 
+<img src="docs/screenshot.jpg" alt="Picotime in the menu bar with its calendar popover open" width="355">
+
+
 Picotime is a menu bar–only "accessory" app: no Dock icon, no window, no app-switcher entry. It just puts one item in the menu bar and refreshes it every second. It also chimes at the top of every hour. Click the clock to open a scrollable calendar.
 
 ## Build
