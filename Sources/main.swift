@@ -4,7 +4,8 @@ import ServiceManagement
 // Picotime — a menu bar clock that shows the time as `YYYY-MM-DD HH:mm:ss`.
 //
 // It runs as an "accessory" app: no Dock icon, no app-switcher entry, no window.
-// All it does is put an NSStatusItem in the menu bar and refresh it once a second.
+// It puts an NSStatusItem in the menu bar, refreshes it once a second, and
+// chimes at the top of every hour. The menu offers a "Start at Login" toggle.
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -18,6 +19,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd HH:mm:ss"
         return f
+    }()
+
+    // Short chime played at the top of every hour (HH:00:00). Loaded once from
+    // the app bundle's Resources; stays nil (silent) if the file is missing.
+    private let hourlyChime: NSSound? = {
+        guard let url = Bundle.main.url(forResource: "beep-beep", withExtension: "mp3") else {
+            return nil
+        }
+        return NSSound(contentsOf: url, byReference: true)
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -64,6 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let timer = Timer(timeInterval: delayToBoundary, repeats: false) { [weak self] _ in
             guard let self else { return }
             self.update()
+            self.chimeIfTopOfHour()
             self.scheduleNextTick()
         }
         timer.tolerance = 0  // fire as close to the boundary as possible
@@ -73,6 +84,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func update() {
         statusItem.button?.title = formatter.string(from: Date())
+    }
+
+    /// Play the chime when the wall clock rolls over to the top of the hour.
+    /// Driven from the timer tick (not the initial launch `update()`), so
+    /// opening the app mid-hour never beeps — only a real HH:00:00 rollover does.
+    private func chimeIfTopOfHour() {
+        let parts = Calendar.current.dateComponents([.minute, .second], from: Date())
+        if parts.minute == 0 && parts.second == 0 {
+            hourlyChime?.stop()  // rewind in case it's somehow still playing
+            hourlyChime?.play()
+        }
     }
 
     /// Register/unregister the app as a login item via SMAppService (macOS 13+).

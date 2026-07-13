@@ -2,7 +2,7 @@
 
 A tiny macOS menu bar clock that shows the time as `YYYY-MM-DD HH:mm:ss` (e.g. `2026-07-13 14:32:07`) — the format the built-in Control Center clock won't give you.
 
-Picotime is a menu bar–only "accessory" app: no Dock icon, no window, no app-switcher entry. It just puts one item in the menu bar and refreshes it every second.
+Picotime is a menu bar–only "accessory" app: no Dock icon, no window, no app-switcher entry. It just puts one item in the menu bar and refreshes it every second. It also chimes at the top of every hour.
 
 ## Build
 
@@ -35,6 +35,10 @@ Click the menu bar clock and toggle **Start at Login**. This registers the app w
 
 The registration is tied to the app's on-disk location, and `build.sh` recreates the bundle on every build — so for a login item that reliably survives, move `Picotime.app` to `/Applications` and toggle it on from there.
 
+## Hourly chime
+
+At the top of every hour (`HH:00:00`) Picotime plays a short chime, bundled at `Resources/beep-beep.mp3`. To change or silence it, replace that file (any `NSSound`-supported format — `.wav`/`.aiff`/`.caf`/`.m4a`/`.mp3`) and rebuild; if you rename it, update the `forResource`/`withExtension` lookup in [Sources/main.swift](Sources/main.swift). See [CREDITS.md](CREDITS.md) for the bundled sound's attribution.
+
 ## Customizing the format
 
 Edit the `dateFormat` string in [Sources/main.swift](Sources/main.swift) and rebuild. It uses [Unicode date field patterns](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table):
@@ -49,3 +53,4 @@ Edit the `dateFormat` string in [Sources/main.swift](Sources/main.swift) and reb
 - `setActivationPolicy(.accessory)` + `LSUIElement` in `Info.plist` → no Dock icon.
 - Monospaced-digit font so the width stays steady as digits change.
 - `SMAppService.mainApp` (macOS 13+) backs the **Start at Login** toggle; the menu delegate re-reads its status on open so the checkmark never goes stale.
+- An `NSSound` loaded from the bundle plays when the second-boundary tick lands on `HH:00:00`. `build.sh` copies `Resources/` into `Contents/Resources/` so the bundle can find it.

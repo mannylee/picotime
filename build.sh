@@ -18,6 +18,14 @@ echo "Creating bundle layout..."
 mkdir -p "${MACOS}"
 cp Info.plist "${CONTENTS}/Info.plist"
 
+# Copy bundled assets (the hourly chime, etc.) into Contents/Resources so
+# Bundle.main.url(forResource:…) can find them at runtime.
+if [ -d Resources ]; then
+  echo "Copying resources..."
+  mkdir -p "${CONTENTS}/Resources"
+  find Resources -type f ! -name '.DS_Store' -exec cp {} "${CONTENTS}/Resources/" \;
+fi
+
 echo "Compiling (universal arm64 + x86_64)..."
 # Compile each slice, then lipo into a universal binary so the same .app runs
 # on Apple Silicon and Intel.
