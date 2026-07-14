@@ -7,5 +7,10 @@ Picotime.app/
 .build/
 DerivedData/
 
+# Coverage reports (./coverage.sh --html <dir>; raw data lives under .build/)
+/cov/
+*.profraw
+*.profdata
+
 # macOS
 .DS_Store

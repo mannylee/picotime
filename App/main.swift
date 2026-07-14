@@ -1,6 +1,11 @@
 import Cocoa
 import ServiceManagement
 
+// The pure clock/calendar logic (ClockFormat, HourChime, CalendarGrid) lives in
+// Sources/PicotimeCore so it can be unit-tested (see Sources/PicotimeCoreTests).
+// build.sh compiles those sources into this same module, so no import is needed
+// here; SwiftPM compiles them as a separate PicotimeCore module for the tests.
+
 // Picotime — a menu bar clock that shows the time as `YYYY-MM-DD HH:mm:ss`.
 //
 // It runs as an "accessory" app: no Dock icon, no app-switcher entry, no window.
@@ -29,14 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
     }
 
-    // Fixed format, locale-independent. Capital HH = 24-hour clock.
-    // en_US_POSIX guarantees the digits/format never get localized.
-    private let formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return f
-    }()
+    // Fixed format, locale-independent (see ClockFormat in PicotimeCore).
+    private let formatter = ClockFormat.makeFormatter()
 
     // Short chime played at the top of every hour (HH:00:00). Loaded once from
     // the app bundle's Resources; stays nil (silent) if the file is missing.
@@ -110,8 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// opening the app mid-hour never beeps — only a real HH:00:00 rollover does.
     private func chimeIfTopOfHour() {
         guard isChimeEnabled else { return }
-        let parts = Calendar.current.dateComponents([.minute, .second], from: Date())
-        if parts.minute == 0 && parts.second == 0 {
+        if HourChime.isTopOfHour(Date()) {
             hourlyChime?.stop()  // rewind in case it's somehow still playing
             hourlyChime?.play()
         }
@@ -215,17 +213,8 @@ final class CalendarViewController: NSViewController, NSTableViewDataSource, NST
     init(app: AppDelegate) {
         self.app = app
 
-        // Build the week list centered on the week containing today.
-        var weeks: [Date] = []
-        let today = Calendar.current.startOfDay(for: Date())
-        if let thisWeek = Calendar.current.dateInterval(of: .weekOfYear, for: today)?.start {
-            for offset in -260...260 {
-                if let w = Calendar.current.date(byAdding: .weekOfYear, value: offset, to: thisWeek) {
-                    weeks.append(w)
-                }
-            }
-        }
-        self.weeks = weeks
+        // Build the week list centered on the week containing today (±5 years).
+        self.weeks = CalendarGrid.weekStarts(around: Date(), calendar: Calendar.current)
 
         super.init(nibName: nil, bundle: nil)
     }
@@ -517,7 +506,7 @@ final class CalendarViewController: NSViewController, NSTableViewDataSource, NST
     }
 
     private func indexOfWeek(_ weekStart: Date) -> Int? {
-        weeks.firstIndex { cal.isDate($0, inSameDayAs: weekStart) }
+        CalendarGrid.indexOfWeek(weekStart, in: weeks, calendar: cal)
     }
 
     private func scrollWeekToTop(_ index: Int?, context: Int) {
@@ -540,7 +529,9 @@ final class CalendarViewController: NSViewController, NSTableViewDataSource, NST
         // Anchor to a week near the top of the viewport (a quarter of the way
         // down, past any partially-scrolled top row) rather than the middle, so
         // opening on today shows today's month instead of one a month ahead.
-        let anchor = min(weeks.count - 1, visible.location + visible.length / 4)
+        guard let anchor = CalendarGrid.focusedAnchorIndex(
+            visibleLocation: visible.location, visibleLength: visible.length,
+            weekCount: weeks.count) else { return nil }
         // Use midweek (Wed-ish) so the label tracks the month most of the row
         // belongs to, not a stray spill-over day.
         return cal.date(byAdding: .day, value: 3, to: weeks[anchor])
@@ -582,17 +573,7 @@ final class CalendarViewController: NSViewController, NSTableViewDataSource, NST
 private final class WeekdayHeaderView: NSView {
     override var isFlipped: Bool { true }
 
-    private let symbols: [String] = {
-        let cal = Calendar.current
-        let df = DateFormatter()
-        df.locale = Locale.current
-        var syms = df.veryShortStandaloneWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
-        let first = cal.firstWeekday - 1  // firstWeekday is 1-based
-        if first > 0 && first < syms.count {
-            syms = Array(syms[first...] + syms[..<first])
-        }
-        return syms
-    }()
+    private let symbols = CalendarGrid.weekdaySymbols()
 
     override func draw(_ dirtyRect: NSRect) {
         let colWidth = bounds.width / 7
@@ -626,7 +607,7 @@ private final class WeekRowView: NSView {
         let colWidth = bounds.width / 7
         let today = Date()
 
-        let days: [Date] = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: weekStart) }
+        let days = CalendarGrid.days(ofWeekStarting: weekStart, calendar: cal)
         guard days.count == 7 else { return }
 
         // Month-boundary divider, drawn as a snaking step. A cell gets a hairline
@@ -641,8 +622,7 @@ private final class WeekRowView: NSView {
         let dividerWidth: CGFloat = 1.5
         dividerColor.setStroke()
         for i in 0..<7 {
-            if let prevWeekDay = cal.date(byAdding: .day, value: -7, to: days[i]),
-               !cal.isDate(days[i], equalTo: prevWeekDay, toGranularity: .month) {
+            if CalendarGrid.beginsMonthFromWeekAbove(days[i], calendar: cal) {
                 let x0 = CGFloat(i) * colWidth
                 let top = NSBezierPath()
                 top.move(to: NSPoint(x: x0, y: dividerWidth / 2))
@@ -650,7 +630,7 @@ private final class WeekRowView: NSView {
                 top.lineWidth = dividerWidth
                 top.stroke()
             }
-            if i > 0, !cal.isDate(days[i], equalTo: days[i - 1], toGranularity: .month) {
+            if i > 0, CalendarGrid.monthChanges(from: days[i - 1], to: days[i], calendar: cal) {
                 let x = CGFloat(i) * colWidth
                 let step = NSBezierPath()
                 step.move(to: NSPoint(x: x, y: 0))
@@ -662,12 +642,10 @@ private final class WeekRowView: NSView {
 
         for i in 0..<7 {
             let day = days[i]
-            let comps = cal.dateComponents([.day, .weekday], from: day)
-            let dayNum = comps.day ?? 0
-            let weekday = comps.weekday ?? 0
+            let dayNum = cal.component(.day, from: day)
             let cellRect = NSRect(x: CGFloat(i) * colWidth, y: 0, width: colWidth, height: bounds.height)
             let isToday = cal.isDate(day, inSameDayAs: today)
-            let isWeekend = (weekday == 1 || weekday == 7)  // Gregorian Sun/Sat
+            let isWeekend = CalendarGrid.isWeekend(day, calendar: cal)  // Gregorian Sun/Sat
 
             // Today: rounded accent outline, like the screenshot's boxed day.
             if isToday {

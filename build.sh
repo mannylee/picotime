@@ -38,10 +38,14 @@ if [ -d Resources ]; then
 fi
 
 echo "Compiling (universal arm64 + x86_64)..."
-# Compile each slice, then lipo into a universal binary so the same .app runs
-# on Apple Silicon and Intel.
-swiftc -O -target arm64-apple-macosx13.0  -o "${BIN}.arm64"  Sources/main.swift
-swiftc -O -target x86_64-apple-macosx13.0 -o "${BIN}.x86_64" Sources/main.swift
+# Compile the app entry (App/main.swift) together with the PicotimeCore sources
+# as a single module, once per arch, then lipo into a universal binary so the
+# same .app runs on Apple Silicon and Intel. swiftc + Command Line Tools only —
+# no Xcode. (SwiftPM's --arch universal build needs Xcode's xcbuild; PicotimeCore
+# is factored out as an SPM module only for the tests, see Package.swift.)
+APP_SOURCES=(App/main.swift Sources/PicotimeCore/*.swift)
+swiftc -O -target arm64-apple-macosx13.0  -module-name Picotime -o "${BIN}.arm64"  "${APP_SOURCES[@]}"
+swiftc -O -target x86_64-apple-macosx13.0 -module-name Picotime -o "${BIN}.x86_64" "${APP_SOURCES[@]}"
 lipo -create -output "${BIN}" "${BIN}.arm64" "${BIN}.x86_64"
 rm -f "${BIN}.arm64" "${BIN}.x86_64"
 

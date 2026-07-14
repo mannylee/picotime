@@ -13,7 +13,19 @@ Picotime is a menu bar–only "accessory" app: no Dock icon, no window, no app-s
 ./build.sh
 ```
 
-This compiles `Sources/main.swift` with `swiftc` (Command Line Tools — no Xcode project needed) and assembles a universal `Picotime.app` bundle, ad-hoc code-signed.
+This compiles `App/main.swift` together with the `Sources/PicotimeCore/` sources using `swiftc` (Command Line Tools — no Xcode project needed) and assembles a universal `Picotime.app` bundle, ad-hoc code-signed.
+
+## Tests & coverage
+
+The pure clock/calendar logic lives in `Sources/PicotimeCore/` and is unit-tested:
+
+```sh
+./run-tests.sh              # build + run the test suite
+./coverage.sh               # run tests, print a coverage report
+./coverage.sh --html cov    # also write an HTML report into cov/
+```
+
+Both run with the Command Line Tools alone — no Xcode. (`swift test` isn't used: its `.xctest` runner ships only with Xcode. The tests are a plain SwiftPM executable with a tiny built-in harness, and coverage comes from `llvm-cov`.)
 
 ## Run
 
@@ -44,11 +56,11 @@ The registration is tied to the app's on-disk location, and `build.sh` recreates
 
 At the top of every hour (`HH:00:00`) Picotime plays a short chime, bundled at `Resources/beep-beep.mp3`. Toggle it on/off from the settings panel at the bottom of the calendar (**Hourly Chime**) — the choice is remembered across launches (it's on by default).
 
-To change the sound, replace that file (any `NSSound`-supported format — `.wav`/`.aiff`/`.caf`/`.m4a`/`.mp3`) and rebuild; if you rename it, update the `forResource`/`withExtension` lookup in [Sources/main.swift](Sources/main.swift). See [CREDITS.md](CREDITS.md) for the bundled sound's attribution.
+To change the sound, replace that file (any `NSSound`-supported format — `.wav`/`.aiff`/`.caf`/`.m4a`/`.mp3`) and rebuild; if you rename it, update the `forResource`/`withExtension` lookup in [App/main.swift](App/main.swift). See [CREDITS.md](CREDITS.md) for the bundled sound's attribution.
 
 ## Customizing the format
 
-Edit the `dateFormat` string in [Sources/main.swift](Sources/main.swift) and rebuild. It uses [Unicode date field patterns](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table):
+Edit `ClockFormat.pattern` in [Sources/PicotimeCore/ClockFormat.swift](Sources/PicotimeCore/ClockFormat.swift) and rebuild. It uses [Unicode date field patterns](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table):
 
 - `HH` 24-hour, `hh` 12-hour, `a` AM/PM
 - `ss` seconds — drop it (and slow the timer) if you don't want a per-second tick
